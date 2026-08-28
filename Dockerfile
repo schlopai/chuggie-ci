@@ -1,5 +1,5 @@
 # The GBA toolchain schlopai/chuggie's CI runs on, built once here and published to
-# ghcr.io/schlopai/chuggie-ci, instead of reassembled in every matrix job.
+# ghcr.io/schlopai/chuggie-toolchain, instead of reassembled in every matrix job.
 #
 # A verify job used to spend minutes before it ran anything: apt, a libmgba source build, a rustup
 # toolchain, `cargo install agb-gbafix`. Multiplied by ~90 matrix jobs that is the bulk of the

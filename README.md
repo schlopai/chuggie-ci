@@ -1,9 +1,12 @@
 # chuggie-ci
 
+Publishes `ghcr.io/schlopai/chuggie-toolchain` — the package name differs from the repo name on
+purpose; see the note in `.github/workflows/publish.yml`.
+
 The toolchain image [schlopai/chuggie](https://github.com/schlopai/chuggie)'s CI runs on.
 
 ```
-ghcr.io/schlopai/chuggie-ci
+ghcr.io/schlopai/chuggie-toolchain
 ```
 
 Contains libmgba 0.10.5 (built headless), the pinned Rust nightly with `rust-src` and
@@ -22,7 +25,7 @@ Pin the content-hash tag, never `latest`:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: ghcr.io/schlopai/chuggie-ci:<hash>
+    container: ghcr.io/schlopai/chuggie-toolchain:<hash>
 ```
 
 The tag is the first 12 characters of `sha256sum Dockerfile`, so the image a tag names can never
