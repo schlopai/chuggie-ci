@@ -56,6 +56,11 @@ jobs:
           tags: |
             ghcr.io/schlopai/chuggie-ci:${{ steps.tag.outputs.tag }}
             ${{ github.ref == 'refs/heads/main' && 'ghcr.io/schlopai/chuggie-ci:latest' || '' }}
+          # No provenance/SBOM attestations. They add a second manifest that buildx has to read
+          # back before writing, and that read is what GHCR refuses on a namespace with no package
+          # in it yet: `denied: permission_denied: read_package`, even holding Packages: write.
+          provenance: false
+          sbom: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
