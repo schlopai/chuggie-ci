@@ -30,25 +30,6 @@ jobs:
           echo "tag=$h" >> "$GITHUB_OUTPUT"
           echo "Image tag: $h"
 
-      # Ask GHCR directly what this token can do, rather than inferring it from a push failure.
-      # A blob-upload POST is the actual write operation; its status is the unambiguous answer.
-      - name: What does GHCR grant us?
-        env:
-          T: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
-          OWNER: ${{ github.repository_owner }}
-        run: |
-          for user in "${{ github.actor }}" "$OWNER"; do
-            echo "=== as $user"
-            body=$(curl -sS -u "$user:$T" \
-              "https://ghcr.io/token?service=ghcr.io&scope=repository:$OWNER/chuggie-ci:pull,push")
-            tok=$(printf '%s' "$body" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("token",""))' 2>/dev/null || true)
-            if [ -z "$tok" ]; then echo "no token: $body"; continue; fi
-            echo -n "  start blob upload -> "
-            curl -sS -o /dev/null -w '%{http_code}\n' -X POST \
-              -H "Authorization: Bearer $tok" \
-              "https://ghcr.io/v2/$OWNER/chuggie-ci/blobs/uploads/"
-          done
-
       - uses: docker/setup-buildx-action@v3
 
       # GHCR_TOKEN if the org keeps GITHUB_TOKEN read-only, GITHUB_TOKEN if it does not. Either
