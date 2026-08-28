@@ -30,6 +30,26 @@ jobs:
           echo "tag=$h" >> "$GITHUB_OUTPUT"
           echo "Image tag: $h"
 
+      # Ask GHCR what it actually grants this token, rather than inferring it from a push failure.
+      # The token endpoint returns a JWT whose `access` claim is the real answer.
+      - name: What does GHCR grant us?
+        env:
+          T: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          for user in "${{ github.actor }}" "${{ github.repository_owner }}"; do
+            echo "--- as $user"
+            jwt=$(curl -sS -u "$user:$T" \
+              "https://ghcr.io/token?service=ghcr.io&scope=repository:${{ github.repository_owner }}/chuggie-ci:pull,push" \
+              | python3 -c 'import sys,json;print(json.load(sys.stdin).get("token",""))')
+            [ -n "$jwt" ] || { echo "no token issued"; continue; }
+            python3 - "$jwt" <<'EOF'
+          import base64, json, sys
+          p = sys.argv[1].split('.')[1]
+          d = json.loads(base64.urlsafe_b64decode(p + '=' * (-len(p) % 4)))
+          print('access:', json.dumps(d.get('access')))
+          EOF
+          done
+
       - uses: docker/setup-buildx-action@v3
 
       # GHCR_TOKEN if the org keeps GITHUB_TOKEN read-only, GITHUB_TOKEN if it does not. Either
