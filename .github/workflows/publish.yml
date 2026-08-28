@@ -30,24 +30,23 @@ jobs:
           echo "tag=$h" >> "$GITHUB_OUTPUT"
           echo "Image tag: $h"
 
-      # Ask GHCR what it actually grants this token, rather than inferring it from a push failure.
-      # The token endpoint returns a JWT whose `access` claim is the real answer.
+      # Ask GHCR directly what this token can do, rather than inferring it from a push failure.
+      # A blob-upload POST is the actual write operation; its status is the unambiguous answer.
       - name: What does GHCR grant us?
         env:
           T: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
         run: |
-          for user in "${{ github.actor }}" "${{ github.repository_owner }}"; do
-            echo "--- as $user"
-            jwt=$(curl -sS -u "$user:$T" \
-              "https://ghcr.io/token?service=ghcr.io&scope=repository:${{ github.repository_owner }}/chuggie-ci:pull,push" \
-              | python3 -c 'import sys,json;print(json.load(sys.stdin).get("token",""))')
-            [ -n "$jwt" ] || { echo "no token issued"; continue; }
-            python3 - "$jwt" <<'EOF'
-          import base64, json, sys
-          p = sys.argv[1].split('.')[1]
-          d = json.loads(base64.urlsafe_b64decode(p + '=' * (-len(p) % 4)))
-          print('access:', json.dumps(d.get('access')))
-          EOF
+          for user in "${{ github.actor }}" "$OWNER"; do
+            echo "=== as $user"
+            body=$(curl -sS -u "$user:$T" \
+              "https://ghcr.io/token?service=ghcr.io&scope=repository:$OWNER/chuggie-ci:pull,push")
+            tok=$(printf '%s' "$body" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("token",""))' 2>/dev/null || true)
+            if [ -z "$tok" ]; then echo "no token: $body"; continue; fi
+            echo -n "  start blob upload -> "
+            curl -sS -o /dev/null -w '%{http_code}\n' -X POST \
+              -H "Authorization: Bearer $tok" \
+              "https://ghcr.io/v2/$OWNER/chuggie-ci/blobs/uploads/"
           done
 
       - uses: docker/setup-buildx-action@v3
