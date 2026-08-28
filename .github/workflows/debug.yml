@@ -1,0 +1,23 @@
+name: debug
+on: workflow_dispatch
+permissions: { contents: read, packages: write }
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Push a 5MB scratch image, verbosely
+        env:
+          T: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -x
+          echo "$T" | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
+          docker pull -q alpine:3.20
+          for name in chuggie-ci scratch-probe; do
+            echo "===== ghcr.io/schlopai/$name"
+            docker tag alpine:3.20 "ghcr.io/schlopai/$name:probe"
+            docker push "ghcr.io/schlopai/$name:probe" 2>&1 | tail -5 || true
+          done
+          echo "===== token endpoint scope actually granted"
+          curl -sS -u '${{ github.actor }}:'"$T" \
+            "https://ghcr.io/token?service=ghcr.io&scope=repository:schlopai/chuggie-ci:pull,push" \
+            | head -c 400; echo
