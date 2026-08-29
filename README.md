@@ -30,7 +30,7 @@ change. The publish workflow prints the tag to pin as a job notice.
 
 ## Changing it
 
-Edit the `Dockerfile` and open a PR. The PR builds the image without publishing, so a broken
+Edit the `Dockerfile` and open a PR. There is no manual trigger — merging is the only way to publish. The PR builds the image without publishing, so a broken
 Dockerfile fails here. On merge to main it publishes under the new hash, and consumers move to it
 deliberately by bumping their pin.
 

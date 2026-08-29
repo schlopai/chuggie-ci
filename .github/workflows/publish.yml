@@ -1,7 +1,10 @@
 # Build the image and publish it to ghcr.io/schlopai/chuggie-toolchain.
 #
 # Tagged with the Dockerfile's own content hash, so a consumer pins an exact image and a rebuild
-# cannot silently change what their jobs run on. `latest` moves only from main, and is for looking
+# cannot silently change what their jobs run on.
+#
+# There is no manual trigger. Editing the Dockerfile and merging is the only way to publish, so
+# what is on the registry always matches a commit on main. `latest` moves only from main, and is for looking
 # at — not for pinning.
 name: Publish
 
@@ -9,7 +12,6 @@ on:
   push:
     branches: [main]
   pull_request:
-  workflow_dispatch:
 
 permissions:
   contents: read
