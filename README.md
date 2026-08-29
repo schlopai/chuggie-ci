@@ -1,7 +1,4 @@
-# chuggie-ci
-
-Publishes `ghcr.io/schlopai/chuggie-toolchain` — the package name differs from the repo name on
-purpose; see the note in `.github/workflows/publish.yml`.
+# chuggie-toolchain
 
 The toolchain image [schlopai/chuggie](https://github.com/schlopai/chuggie)'s CI runs on.
 
